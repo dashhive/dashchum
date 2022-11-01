@@ -1,6 +1,8 @@
 # Dash Chum
 ### a simple HTML, CSS & JS test kit for [Dash Mate](https://github.com/dashpay/platform/tree/v0.23.0-alpha.7/packages/dashmate)
 
+A lot of the work that went in to making this repo has been streamed and is availabe in this [Dash Chum YouTube Playlist](https://youtube.com/playlist?list=PLYU0okGwK--I0xm22OqLl6wjGUTmx-afP)
+
 ### System Prerequisites
 Make sure you have Docker, Node.js & `dashmate` installed
 
@@ -17,7 +19,7 @@ npm i -g dashmate@0.23-alpha
 dashmate setup local # won't work if newgrp / logout step is skipped
 dashmate group start
 ```
-**DO NOT USE** `snap` to install Docker on Ubuntu. [^1]
+**DO NOT USE** `snap` to install Docker on Ubuntu. [^1][^2]
 
 
 ### Configuration
@@ -49,7 +51,7 @@ docker exec -it dash_masternode_local_seed-core-1 dash-cli sendtoaddress "yMbdOi
 ```
 
 ### Reset `dashmate`
-You will likely find the need to reset [^2] your dashmate (perhaps daily), this is a helper script that should get you a fresh version.
+You will likely find the need to reset [^3] your dashmate (perhaps daily), this is a helper script that should get you a fresh version.
 
 ```sh
 #!/bin/sh
@@ -64,4 +66,6 @@ dashmate setup local
 ### Notes
 [^1]: **DO NOT USE** `snap` to install Docker on Ubuntu. It may be hard / impossible to get docker working properly with `dashmate` without formatting your system and re-installing.
 
-[^2]: if you see PoSe Penalty errors, you may need to reset your `dashmate` setup
+[^2]: Snap was a bad choice. https://youtu.be/V-0vEbE_INU?t=188
+
+[^3]: if you see PoSe Penalty errors, you may need to reset your `dashmate` setup
