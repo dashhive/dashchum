@@ -2,13 +2,7 @@
 
 import {
   baseClientOpts,
-  newWalletClientOpts,
-  alphaWalletClientOpts,
   genWalletClient,
-  // alphaIdentityId,
-  // alphaContractId,
-  // alphaMnemonic,
-  // alphaAddress,
 } from './config.js'
 
 const CONTRACT_APP_NAME = 'dashchumApp'
@@ -18,7 +12,11 @@ let alphaAddress = localStorage.getItem('address')
 let alphaIdentityId = localStorage.getItem('identity_id')
 let alphaContractId = localStorage.getItem('contract_id')
 
-window.alphaWalletClientOpts = genWalletClient(alphaMnemonic, alphaContractId, CONTRACT_APP_NAME)
+window.alphaWalletClientOpts = genWalletClient(
+  alphaMnemonic,
+  alphaContractId,
+  CONTRACT_APP_NAME
+)
 
 console.log('window.alphaWalletClientOpts', window.alphaWalletClientOpts)
 
@@ -31,8 +29,6 @@ let table = document.querySelector('table')
 let tbody = table.querySelector('table > tbody')
 
 async function getBestBlock () {
-  // const client = new Dash.Client(baseClientOpts)
-
   async function connect() {
     return await baseClient.getDAPIClient().core.getBestBlockHash()
   }
@@ -40,12 +36,9 @@ async function getBestBlock () {
   connect()
     .then((d) => console.log('Connected. Best block hash:\n', d))
     .catch((e) => console.error('Something went wrong:\n', e))
-    // .finally(() => baseClient.disconnect())
 }
 
 async function getChainStatus() {
-  // const client = new Dash.Client(baseClientOpts)
-
   async function connect() {
     return await baseClient.getDAPIClient().core.getStatus()
   }
@@ -56,7 +49,6 @@ async function getChainStatus() {
       console.log('Connected. Chain Status:\n', d)
     })
     .catch((e) => console.error('Something went wrong:\n', e))
-    // .finally(() => baseClient.disconnect())
 }
 
 function toggleForm(name) {
@@ -69,8 +61,6 @@ async function getWalletBalance() {
 
   const mnemonic = client.wallet.exportWallet()
   const { address } = account.getUnusedAddress()
-  // const { balance } = await client.platform.identities.get(alphaIdentityId)
-  // await (await client.getWalletAccount()).identities.getIdentityIds()
 
   const totalBalance = await account.getTotalBalance()
   const unBalanced = await account.getUnconfirmedBalance()
@@ -114,7 +104,6 @@ async function getWalletBalance() {
     }
   }
 
-  // let tbody = document.querySelector('table > tbody')
   tbody.insertAdjacentHTML(
     'beforeend',
     `<tr>
@@ -147,53 +136,8 @@ async function getWalletBalance() {
   return await client
 }
 
-// async function createWallet() {
-//   const newClient = new Dash.Client(newWalletClientOpts)
-
-//   const account = await newClient.getWalletAccount()
-
-//   const mnemonic = newClient.wallet.exportWallet()
-//   const { address } = account.getUnusedAddress()
-//   const balance = (await account.getConfirmedBalance()) / SAT
-//   // const addresses = [
-//   //   account.getUnusedAddress()?.address,
-//   //   account.getUnusedAddress()?.address,
-//   //   account.getUnusedAddress()?.address,
-//   //   account.getUnusedAddress()?.address,
-//   // ]
-
-//   console.log('Mnemonic:', mnemonic)
-//   console.log('Unused address:', address)
-
-//   localStorage.setItem('mnemonic', mnemonic)
-//   localStorage.setItem('address', address)
-
-//   // let tbody = document.querySelector('table > tbody')
-
-//   tbody.insertAdjacentHTML('beforeend', `<tr>
-//     <td>${balance}</td>
-//     <td>${mnemonic}</td>
-//     <td>${address}</td>
-//   </tr>`)
-
-//   // localStorage.setItem('DASH_TEST', JSON.stringify({
-//   //   mnemonic,
-//   //   address
-//   // }))
-
-//   // Handle wallet async errors
-//   newClient.on('error', (error, context) => {
-//     console.error(`Client error: ${error.name}`)
-//     console.error(context)
-//   })
-
-//   return await newClient
-// }
-
 async function createIdentity() {
-  // const client = new Dash.Client(alphaWalletClientOpts)
   console.log('client.platform.identities', await (await client.getWalletAccount()).identities.getIdentityIds())
-  // let alphaIdents = await (await client.getWalletAccount()).identities.getIdentityIds();
 
   const newIdentity = await client.platform.identities.register()
   const jsonIdent = newIdentity.toJSON()
@@ -215,11 +159,6 @@ async function createIdentity() {
     </tr>`
   )
 
-  // client.on('error', (error, context) => {
-  //   console.error(`Client error: ${error.name}`)
-  //   console.error(context)
-  // })
-
   return client
 }
 
@@ -232,7 +171,6 @@ async function topupIdentity() {
 
 
 async function registerContract() {
-  // const client = new Dash.Client(alphaWalletClientOpts)
   console.log('reg contract for id', alphaIdentityId)
   const identity = await client.platform.identities.get(alphaIdentityId)
 
@@ -274,7 +212,6 @@ async function retrieveContract() {
     return
   }
   return await client.platform.contracts.get(alphaContractId)
-  // return await client.platform.contracts.get(Dash.PlatformProtocol.Identifier.from(alphaContractId))
 }
 
 async function submitDoc() {
@@ -311,7 +248,7 @@ async function submitDoc() {
 
 async function getDocuments() {
   return client.platform.documents.get(`${CONTRACT_APP_NAME}.note`, {
-    limit: 20, // Only retrieve 2 document
+    limit: 20,
   })
 }
 
@@ -345,9 +282,7 @@ retrieveContract()
     console.dir(d?.toJSON(), { depth: 5 })
 
     await client.getApps().set(CONTRACT_APP_NAME, {
-      // contractId: Dash.PlatformProtocol.Identifier.from(dj.contract.$id),
       contractId: Dash.PlatformProtocol.Identifier.from(d?.id),
-      // contractId: d?.dataContract?.id,
       contract: d,
     })
 
@@ -360,11 +295,18 @@ retrieveContract()
         docList.classList.add('docs')
 
         let docs = d.map(n => {
-          // console.log('Document:\n', n, n?.toJSON());
-          return `<tr><td>${n.type}</td><td>${n.revision}</td><td>${n.data.message}</td></tr>`
+          return `<tr>
+            <td>${n.type}</td>
+            <td>${n.revision}</td>
+            <td>${n.data.message}</td>
+          </tr>`
         })
 
-        docList.innerHTML = `<thead align="center"><tr><td colspan="3">Documents</td></tr><tr><td>type</td><td>revision</td><td>value</td></tr></thead><tbody>${docs.join('\n')}</tbody>`
+        docList.innerHTML = `<thead align="center">
+          <tr><td colspan="3">Documents</td></tr>
+          <tr><td>type</td><td>revision</td><td>value</td></tr>
+        </thead>
+        <tbody>${docs.join('\n')}</tbody>`
 
         document.querySelector('table').insertAdjacentElement('afterend', docList)
       })
@@ -377,11 +319,6 @@ getApps()
     console.log('get apps', d)
   })
   .catch((e) => console.error('Something went wrong:\n', e))
-
-// generateButton(
-//   'genwal',
-//   () => createWallet()
-// )
 
 generateButton(
   'genident',
@@ -400,18 +337,12 @@ generateButton(
       let dj = d?.toJSON()
 
       console.log('Contract registered:', d, dj)
-      // dj?.dataContract?.$id
-      // d?.dataContract?.id
-      // localStorage.setItem('contract_id', d?.contract?.id)
       localStorage.setItem('contract_id', dj?.dataContract?.$id)
       alphaContractId = dj?.dataContract?.$id
 
-      // return { d, dj }
       let apps = client.getApps()
       apps.set(CONTRACT_APP_NAME, {
-        // contractId: Dash.PlatformProtocol.Identifier.from(dj.contract.$id),
         contractId: Dash.PlatformProtocol.Identifier.from(d?.dataContract?.id),
-        // contractId: d?.dataContract?.id,
         contract: d,
       })
       console.log('Registered apps:', apps)
