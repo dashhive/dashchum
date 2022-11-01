@@ -1,7 +1,7 @@
 # Dash Chum
 ### a simple HTML, CSS & JS test kit for [Dash Mate](https://github.com/dashpay/platform/tree/v0.23.0-alpha.7/packages/dashmate)
 
-A lot of the work that went in to making this repo has been streamed and is availabe in this [Dash Chum YouTube Playlist](https://youtube.com/playlist?list=PLYU0okGwK--I0xm22OqLl6wjGUTmx-afP)
+A lot of the work that went in to making this repo has been streamed and is available in this [Dash Chum YouTube Playlist](https://youtube.com/playlist?list=PLYU0okGwK--I0xm22OqLl6wjGUTmx-afP)
 
 ### System Prerequisites
 Make sure you have Docker, Node.js & `dashmate` installed
