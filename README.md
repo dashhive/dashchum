@@ -4,9 +4,7 @@
 A lot of the work that went in to making this repo has been streamed and is available in this [Dash Chum YouTube Playlist](https://youtube.com/playlist?list=PLYU0okGwK--I0xm22OqLl6wjGUTmx-afP)
 
 ### System Prerequisites
-Make sure you have Docker, Node.js & `dashmate` installed
-
-Follow the instructions [at this link](https://docs.dash.org/en/stable/masternodes/setup-testnet.html?highlight=dashmate#dashmate-installation) or the ones below
+You will need to install Docker, Node.js & `dashmate`, follow the instructions [at this link](https://docs.dash.org/en/stable/masternodes/setup-testnet.html?highlight=dashmate#dashmate-installation) or the ones below to get them installed correctly.
 
 ```sh
 # Linux / Mac Setup
