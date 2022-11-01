@@ -36,6 +36,18 @@ npm start # run test server
 ```
 Navigate to [http://localhost:5555/](http://localhost:5555/)
 
+### Usage
+To generate an identity, a contract or submit a document, you need to add funds to your wallet. That can be accomplished with the commands below.
+
+```sh
+# Get the balance of the dashmate seed node
+docker exec -it dash_masternode_local_seed-core-1 dash-cli getbalance
+
+# Send 100 dash from the seed node to your wallet
+# Copy the Address from the first row in the table
+docker exec -it dash_masternode_local_seed-core-1 dash-cli sendtoaddress "yMbdOiNzOCNKlJwj530ir7aJ4DtjFqVejz" 100
+```
+
 ### Reset `dashmate`
 You will likely find the need to reset [^2] your dashmate (perhaps daily), this is a helper script that should get you a fresh version.
 

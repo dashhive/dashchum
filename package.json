@@ -1,13 +1,23 @@
 {
   "name": "dashchum",
   "version": "0.0.1",
-  "description": "",
+  "description": "a simple HTML, CSS & JS test kit for DashMate",
   "main": "index.js",
   "scripts": {
     "start": "lite-reload ./ --port=5555"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "dash",
+    "dashmate",
+    "cryptocurrency",
+    "node",
+    "docker"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dashhive/dashchum.git"
+  },
+  "author": "jojobyte <jojobyte@0t.lc> (https://jojo.io/)",
   "license": "MIT",
   "dependencies": {
     "dash": "^3.23.0-alpha.7"
