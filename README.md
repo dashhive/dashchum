@@ -44,7 +44,7 @@ To generate an identity, a contract or submit a document, you need to add funds 
 docker exec -it dash_masternode_local_seed-core-1 dash-cli getbalance
 
 # Send 100 dash from the seed node to your wallet
-# Copy the Address from the first row in the table
+# Copy the Address from the first row in the table (in your browser)
 docker exec -it dash_masternode_local_seed-core-1 dash-cli sendtoaddress "yMbdOiNzOCNKlJwj530ir7aJ4DtjFqVejz" 100
 ```
 
@@ -60,7 +60,6 @@ docker volume prune -f
 rm -rf ~/.dashmate
 dashmate setup local
 ```
-
 
 ### Notes
 [^1]: **DO NOT USE** `snap` to install Docker on Ubuntu. It may be hard / impossible to get docker working properly with `dashmate` without formatting your system and re-installing.
