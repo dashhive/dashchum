@@ -1,7 +1,7 @@
-# Dash Chum
-## a simple HTML, CSS & JS test kit for [Dash Mate](https://github.com/dashpay/platform/tree/v0.23.0-alpha.7/packages/dashmate)
+## Dash Chum
+### a simple HTML, CSS & JS test kit for [Dash Mate](https://github.com/dashpay/platform/tree/v0.23.0-alpha.7/packages/dashmate)
 
-### System Setup Prerequisites
+### System Prerequisites
 Make sure you have Docker, Node.js & `dashmate` installed
 
 Follow the instructions [at this link](https://docs.dash.org/en/stable/masternodes/setup-testnet.html?highlight=dashmate#dashmate-installation) or the ones below
