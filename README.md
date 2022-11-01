@@ -1,4 +1,4 @@
-## Dash Chum
+# Dash Chum
 ### a simple HTML, CSS & JS test kit for [Dash Mate](https://github.com/dashpay/platform/tree/v0.23.0-alpha.7/packages/dashmate)
 
 ### System Prerequisites
