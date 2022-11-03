@@ -3,7 +3,7 @@
 
 > A lot of the work that went in to making this repo has been streamed and is available in this [Dash Chum YouTube Playlist](https://youtube.com/playlist?list=PLYU0okGwK--I0xm22OqLl6wjGUTmx-afP)
 
-The instructions below are meant to give you a working local [Dash](https://www.dash.org/) testnet / devnet. The purpose of which is to allow building on the Dash platform without needing to use real Dash.
+The instructions below are meant to give you a working local [Dash](https://www.dash.org/) testnet / devnet. The purpose of which is to allow building on the Dash platform without needing to use real Dash (Ð).
 
 This gives you a siloed Dash network and generates a wallet unique to your locally running network. You fund it via the Seed Node generated from `dashmate` (see [Usage](#usage)).
 
