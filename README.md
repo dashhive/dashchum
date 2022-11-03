@@ -1,23 +1,47 @@
 # Dash Chum
 ### a simple HTML, CSS & JS test kit for [Dash Mate](https://github.com/dashpay/platform/tree/v0.23.0-alpha.7/packages/dashmate)
 
-A lot of the work that went in to making this repo has been streamed and is available in this [Dash Chum YouTube Playlist](https://youtube.com/playlist?list=PLYU0okGwK--I0xm22OqLl6wjGUTmx-afP)
+> A lot of the work that went in to making this repo has been streamed and is available in this [Dash Chum YouTube Playlist](https://youtube.com/playlist?list=PLYU0okGwK--I0xm22OqLl6wjGUTmx-afP)
 
+The instructions below are meant to give you a working local [Dash](https://www.dash.org/) testnet / devnet. The purpose of which is to allow building on the Dash platform without needing to use real Dash.
+
+This gives you a siloed Dash network and generates a wallet unique to your locally running network. You fund it via the Seed Node generated from `dashmate` (see [Usage](#usage)).
+
+
+## Getting Started
 ### System Prerequisites
-You will need to install Docker, Node.js & `dashmate`, follow the instructions [at this link](https://docs.dash.org/en/stable/masternodes/setup-testnet.html?highlight=dashmate#dashmate-installation) or the ones below to get them installed correctly.
+You will need to install Docker, Node.js & `dashmate`, which can be achieved with the instructions below.
 
+#### Docker & Node.js Installation
 ```sh
 # Linux / Mac Setup
+# Install Docker
 curl -fsSL https://get.docker.com -o get-docker.sh && sh ./get-docker.sh
-sudo usermod -aG docker $USER # adds the docker group to your user
-newgrp docker # a workaround, alternatively logout / restart
-curl -sS https://webi.sh/node@16 | sh # installs node.js
+
+# adds the docker group to your user
+sudo usermod -aG docker $USER
+
+# a workaround, alternatively logout / restart
+newgrp docker
+
+# Install Node.js
+curl -sS https://webi.sh/node@16 | sh
 source ~/.config/envman/PATH.env
+```
+
+#### `dashmate` Installation & Setup
+```sh
+# Install Dashmate
 npm i -g dashmate@0.23-alpha
-dashmate setup local # won't work if newgrp / logout step is skipped
+
+# Setup Dashmate
+# won't work if newgrp / logout step is skipped
+dashmate setup local
 dashmate group start
 ```
-**DO NOT USE** `snap` to install Docker on Ubuntu. [^1][^2]
+The official method from the [Testnet Masternode Dash Docs](https://docs.dash.org/en/stable/masternodes/setup-testnet.html?highlight=dashmate#dashmate-installation) also works, but was a little outdated at time of writing (Oct 2022).
+
+**DO NOT USE** `snap` to install Docker on Ubuntu. See references [^1][^2]
 
 
 ### Configuration
@@ -27,9 +51,10 @@ You have two options for this stage. You can...
 2. Modify your `hosts` file (`vim /etc/hosts` on linux) and add an alias for `dashmate`
     - `127.0.0.1  dashmate`
 
-### Install this project
+### Clone & Install this project
 
 ```sh
+git clone https://github.com/dashhive/dashchum.git
 cd dashchum # change to this repo
 npm install # install packages
 npm start # run test server
@@ -37,7 +62,9 @@ npm start # run test server
 Navigate to [http://localhost:5555/](http://localhost:5555/)
 
 ### Usage
-To generate an identity, a contract or submit a document, you need to add funds to your wallet. That can be accomplished with the commands below.
+Once your wallet is setup (which should happen just by loading [http://localhost:5555/](http://localhost:5555/) in your browser) you will need to add funds to it to generate an identity, a contract or submit a document.
+
+That can be accomplished with the commands below.
 
 ```sh
 # Get the balance of the dashmate seed node
