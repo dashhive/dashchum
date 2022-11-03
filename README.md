@@ -29,6 +29,8 @@ curl -sS https://webi.sh/node@16 | sh
 source ~/.config/envman/PATH.env
 ```
 
+If you skip the steps above (perhaps you already have them installed) and run into any issues with the `dashmate` setup, you may need to re-install Docker or Node.js.
+
 #### `dashmate` Installation & Setup
 ```sh
 # Install Dashmate
@@ -36,12 +38,15 @@ npm i -g dashmate@0.23-alpha
 
 # Setup Dashmate
 # won't work if newgrp / logout step is skipped
+#
 dashmate setup local
+
+# start dashmate docker containers
 dashmate group start
 ```
 The official method from the [Testnet Masternode Dash Docs](https://docs.dash.org/en/stable/masternodes/setup-testnet.html?highlight=dashmate#dashmate-installation) also works, but was a little outdated at time of writing (Oct 2022).
 
-**DO NOT USE** `snap` to install Docker on Ubuntu. See references [^1][^2]
+***WARNING*** **DO NOT USE** `snap` to install Docker on Ubuntu. See references [^1][^2]
 
 
 ### Configuration
