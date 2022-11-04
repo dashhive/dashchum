@@ -5,16 +5,19 @@
 
 The instructions below are meant to give you a working local [Dash](https://www.dash.org/) testnet / devnet. The purpose of which is to allow building on the Dash platform without needing to use real Dash (Ð).
 
-This gives you a siloed Dash network and generates a wallet unique to your locally running network. You fund it via the Seed Node generated from `dashmate` (see [Usage](#usage)).
+This gives you a siloed Dash network and generates a wallet unique to your locally running network. You fund it via the Seed Node generated from [Dashmate](https://github.com/dashpay/platform/tree/v0.23.0-alpha.7/packages/dashmate) (see [Usage](#usage)).
 
 
 ## Getting Started
 ### System Prerequisites
+* [Docker](https://docs.docker.com/engine/installation/) (v20.10+)
+* [Node.js](https://nodejs.org/en/download/) (v16.0+, NPM v8.0+)
+* [Dashmate](https://github.com/dashpay/platform/tree/v0.23.0-alpha.7/packages/dashmate) (v0.23.0-alpha.7)
+
 You will need to install Docker, Node.js & `dashmate`, which can be achieved with the instructions below.
 
-#### Docker & Node.js Installation
+#### Docker & Node.js Installation - Linux
 ```sh
-# Linux / Mac Setup
 # Install Docker
 curl -fsSL https://get.docker.com -o get-docker.sh && sh ./get-docker.sh
 
@@ -31,14 +34,14 @@ source ~/.config/envman/PATH.env
 
 If you skip the steps above (perhaps you already have them installed) and run into any issues with the `dashmate` setup, you may need to re-install Docker or Node.js.
 
-#### `dashmate` Installation & Setup
+#### Dashmate Installation & Setup
 ```sh
 # Install Dashmate
 npm i -g dashmate@0.23-alpha
 
 # Setup Dashmate
 # won't work if newgrp / logout step is skipped
-#
+# if this fails, try re-running it once or twice
 dashmate setup local
 
 # start dashmate docker containers
@@ -77,10 +80,11 @@ docker exec -it dash_masternode_local_seed-core-1 dash-cli getbalance
 
 # Send 100 dash from the seed node to your wallet
 # Copy the Address from the first row in the table (in your browser)
+# replace "yMbdOiNzOCNKlJwj530ir7aJ4DtjFqVejz" with your address
 docker exec -it dash_masternode_local_seed-core-1 dash-cli sendtoaddress "yMbdOiNzOCNKlJwj530ir7aJ4DtjFqVejz" 100
 ```
 
-### Reset `dashmate`
+### Reset Dashmate
 You will likely find the need to reset [^3] your dashmate (perhaps daily), this is a helper script that should get you a fresh version.
 
 ```sh
