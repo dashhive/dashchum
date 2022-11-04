@@ -41,10 +41,10 @@ npm i -g dashmate@0.23-alpha
 
 # Setup Dashmate
 # won't work if newgrp / logout step is skipped
-# if this fails, try re-running it once or twice
-dashmate setup local
 
-# start dashmate docker containers
+# if either of these steps fail,
+# try re-running each once or twice
+dashmate setup local
 dashmate group start
 ```
 The official method from the [Testnet Masternode Dash Docs](https://docs.dash.org/en/stable/masternodes/setup-testnet.html?highlight=dashmate#dashmate-installation) also works, but was a little outdated at time of writing (Oct 2022).
