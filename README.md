@@ -69,7 +69,7 @@ npm start # run test server
 ```
 Navigate to [http://localhost:5555/](http://localhost:5555/)
 
-### Usage
+### Funding your wallet
 Once your wallet is setup (which should happen just by loading [http://localhost:5555/](http://localhost:5555/) in your browser) you will need to add funds to it to generate an identity, a contract or submit a document.
 
 That can be accomplished with the commands below.

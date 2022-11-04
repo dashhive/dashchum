@@ -6,16 +6,60 @@
 <style>
   body { background: #222; color: #eee; }
   form { margin-bottom: 1rem; }
+  table {
+    width: 100%;
+  }
   table > tbody td {
     padding: 1rem;
   }
   .hide {
     display: none;
   }
+  a {
+    color: deepskyblue;
+    text-decoration: none;
+  }
+  a:hover {
+    color: deepskyblue;
+    text-decoration: dashed;
+    text-decoration-line: underline;
+  }
+  pre {
+    background-color: #111;
+    padding: 1rem;
+    max-width: 100%;
+    /* overflow: auto; */
+  }
+  pre code {
+    white-space: pre-line;
+  }
+  pre code > * {
+    display: inline;
+  }
+  pre code .dem {
+    color: #888;
+  }
+  pre code em {
+    color: #f55;
+    font-style: normal;
+  }
+  pre code address {
+    color: #5b5;
+    font-style: normal;
+  }
+  pre code output {
+    color: #0bf;
+    font-style: italic;
+  }
+  form[name="subdoc"] {
+    margin-top: 2rem;
+  }
 </style>
 </head>
 <body>
 <h1>Dash Chum</h1>
+
+<div class="msg"></div>
 
 <!-- <form name="genwal" class="hide">
   <button type="submit">Generate Wallet</button>
@@ -25,16 +69,8 @@
   <button type="submit">Generate Identity</button>
 </form>
 
-<form name="gencon" class="hide">
-  <button type="submit">Generate Contract</button>
-</form>
-
 <form name="topup" class="hide">
   <button type="submit">Top Up Identity</button>
-</form>
-
-<form name="subdoc" class="hide">
-  <button type="submit">Submit Document</button>
 </form>
 
 <table class="hide">
@@ -55,6 +91,15 @@
     -->
   </tbody>
 </table>
+
+<form name="gencon" class="hide">
+  <button type="submit">Generate Contract</button>
+</form>
+
+<form name="subdoc" class="hide">
+  <input name="msg" placeholder="Type a message..." />
+  <button type="submit">Save Message</button>
+</form>
 
 <script src="./node_modules/dash/dist/dash.min.js"></script>
 <script src="./index.js" type="module" async></script>
