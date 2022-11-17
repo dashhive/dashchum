@@ -1,35 +1,89 @@
 // import Dash from 'dash'
+// import Dash from './node_modules/dash/dist/dash.min.js'
+// import Dash from './node_modules/dash/build/src/index.js'
+
+/**
+ * @typedef {import('dash')} Dash
+ */
 
 import {
   // baseClientOpts,
   genWalletClient,
 } from './config.js'
 
-const CONTRACT_APP_NAME = 'dashchumApp'
+const CONTRACT_APP_NAME = 'chumApp'
 
-let alphaMnemonic = localStorage.getItem('mnemonic')
-let alphaAddress = localStorage.getItem('address')
-let alphaIdentityId = localStorage.getItem('identity_id')
-let alphaContractId = localStorage.getItem('contract_id')
+let storedMnemonic = localStorage.getItem(dashnet+'_mnemonic')
+let storedAddress = localStorage.getItem(dashnet+'_address')
+let storedIdentityId = localStorage.getItem(dashnet+'_identity_id')
+let storedContractId = localStorage.getItem(dashnet+'_contract_id')
+let storedUserId = localStorage.getItem(dashnet+'_user_id')
+let storedUserName = localStorage.getItem(dashnet+'_username')
 
-window.alphaWalletClientOpts = genWalletClient(
-  alphaMnemonic,
-  alphaContractId,
-  CONTRACT_APP_NAME
+window.storedWalletClientOpts = genWalletClient(
+  storedMnemonic,
+  storedContractId,
+  CONTRACT_APP_NAME,
+  dashNetwork,
+  currentHeight
 )
 
-console.log('window.alphaWalletClientOpts', window.alphaWalletClientOpts)
+console.log('window.storedWalletClientOpts', window.storedWalletClientOpts)
 
-// const baseClient = new Dash.Client(baseClientOpts)
-let client = new Dash.Client(alphaWalletClientOpts)
+let client // = new Dash.Client(storedWalletClientOpts)
 
-window.dashClient = client
+// window.dashClient = client
 
 const SAT = 100000000
 
+
 let table = document.querySelector('table')
-let tbody = table.querySelector('table > tbody')
+// let tbody = table.querySelector('table > tbody')
+let userBalanceEl = document.querySelector('header > figure > figcaption')
+let addrEl = document.querySelector('article.addr')
 let POLL_INTERVAL
+
+dashNetwork = localStorage.getItem('network') || 'testnet'
+dashnet = getNetworkType(dashNetwork)
+
+document.dashnet.net.addEventListener(
+  'change',
+  () => changeNetwork(null, async (netChange) => {
+    await client.disconnect()
+
+    dashNetwork = netChange.dashNetwork
+    dashnet = netChange.dashnet
+    currentHeight = dashnet === 'test' ? 834431 : 1
+
+    storedMnemonic = localStorage.getItem(dashnet+'_mnemonic')
+    storedAddress = localStorage.getItem(dashnet+'_address')
+    storedIdentityId = localStorage.getItem(dashnet+'_identity_id')
+    storedContractId = localStorage.getItem(dashnet+'_contract_id')
+    storedUserId = localStorage.getItem(dashnet+'_user_id')
+    storedUserName = localStorage.getItem(dashnet+'_username')
+
+    window.storedWalletClientOpts = genWalletClient(
+      storedMnemonic,
+      storedContractId,
+      CONTRACT_APP_NAME,
+      dashNetwork,
+      currentHeight
+    )
+
+    console.log('window.storedWalletClientOpts', window.storedWalletClientOpts)
+
+    await initUI()
+  })
+)
+
+document.dashnet.host.addEventListener(
+  'change',
+  e => localStorage.setItem('network', e.target.value)
+)
+
+// function getNetworkType(netType = dashNetwork) {
+//   return netType === 'testnet' ? 'test' : 'dev'
+// }
 
 async function getBestBlock () {
   async function connect() {
@@ -50,6 +104,7 @@ async function getChainStatus() {
     .then((d) => {
       console.log('Connected. Current Block Height:\n', d.chain.blocksCount)
       console.log('Connected. Chain Status:\n', d)
+      currentHeight = d.chain.blocksCount
     })
     .catch((e) => console.error('Something went wrong:\n', e))
 }
@@ -70,9 +125,25 @@ function toggleForm(name, show) {
   }
 }
 
-function setMessage(msg) {
-  document.querySelector(`.msg`)
-    .innerHTML = msg
+function setMessage(msg, className) {
+  let msgEl = document.querySelector(`.msg`)
+  msgEl.classList.value = 'msg'
+
+  if (className) {
+    msgEl.classList.add(className)
+  }
+
+  msgEl.innerHTML = msg
+}
+
+function docTable(rows) {
+  return `
+    <thead align="center">
+      <tr><td colspan="4">Documents</td></tr>
+      <tr><td width="15%">type</td><td width="15%">revision</td><td>value</td><td>ctrl</td></tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  `
 }
 
 async function updateUI({ mnemonic, address, acctBalance, prettyBalance, idents, }) {
@@ -80,42 +151,60 @@ async function updateUI({ mnemonic, address, acctBalance, prettyBalance, idents,
     table.classList.remove('hide')
   }
 
+  let docList = document.querySelector('form[name="subdoc"] + table')
+  docList = docList?.remove()
+  toggleForm('subdoc', false)
+
   if (mnemonic && address && prettyBalance) {
-    tbody.innerHTML = `<tr>
-      <td>${prettyBalance}</td>
-      <td>${mnemonic}</td>
-      <td>${address}</td>
-    </tr>`
+    addrEl.innerHTML = `<div>Unused Address:</div>${address}`
+    userBalanceEl.innerHTML = `<sub>Ð${prettyBalance}</sub>`
+    // `<tr>
+    //   <td>${prettyBalance}</td>
+    //   <td>${address}</td>
+    // </tr>`
   }
+
+  console.log(
+    'updateUI show generate identity btn',
+    idents?.length === 0,
+    { idents, acctBalance, dashNetwork }
+  )
 
   if (idents?.length === 0) {
     if (acctBalance > 0) {
       toggleForm('genident', true)
     } else {
       toggleForm('genident', false)
-      setMessage(`
-        <p>You must fund your wallet before proceeding, see <a href="https://github.com/dashhive/dashchum#funding-your-wallet">Dash Chum docs</a> for instructions or copy & paste the command below in your terminal.</p>
+      if (dashNetwork !== 'testnet') {
+        setMessage(`
+          <p>You must fund your wallet before proceeding, see <a href="https://github.com/dashhive/dashchum#funding-your-wallet">Dash Chum docs</a> for instructions or copy & paste the command below in your terminal.</p>
 
-        <pre><code><span class="dem">docker exec -it dash_masternode_local_seed-core-1</span> dash-cli <em>sendtoaddress</em> <address>"${address}"</address> <output>100</output></code></pre>
-      `)
+          <pre><code><span class="dem">docker exec -it dash_masternode_local_seed-core-1</span> dash-cli <em>sendtoaddress</em> <address>"${address}"</address> <output>100</output></code></pre>
+        `)
+      } else {
+        setMessage(`
+          <p>You must fund your wallet before proceeding. Go to <a href="https://testnet-faucet.dash.org/">https://testnet-faucet.dash.org/</a> or <a href="http://faucet.testnet.networks.dash.org/">http://faucet.testnet.networks.dash.org/</a> and request 10+ Dash to your new address (${address}).</p>
+        `)
+      }
     }
   }
 
-  if (!alphaIdentityId && idents?.[0]) {
-    localStorage.setItem('identity_id', idents[0])
-    alphaIdentityId = idents[0]
+  if (!storedIdentityId && idents?.[0]) {
+    localStorage.setItem(dashnet+'_identity_id', idents[0])
+    storedIdentityId = idents[0]
     // toggleForm('genident', false)
   }
 
-  console.log('updateUI', { idents, alphaContractId })
+  console.log('updateUI', { idents, storedContractId })
 
   if (idents?.length > 0) {
     toggleForm('genident', false)
 
     // toggleForm('topup')
 
-    if (!alphaContractId) {
+    if (!storedContractId) {
       toggleForm('subdoc', false)
+      toggleForm('regname', false)
       toggleForm('gencon', true)
     } else {
       toggleForm('gencon', false)
@@ -123,27 +212,19 @@ async function updateUI({ mnemonic, address, acctBalance, prettyBalance, idents,
 
       retrieveContract()
         .then(async (d) => {
-          console.log('retrieve data contract', d)
+          console.log('retrieve data contract', d, docList)
           // console.dir(d?.toJSON(), { depth: 5 })
 
-          let docList = document.createElement('table')
+          if (!docList) {
+            docList = document.createElement('table')
 
-          docList.classList.add('docs')
+            docList.classList.add('docs')
 
-          function docTable(rows) {
-            return `
-              <thead align="center">
-                <tr><td colspan="3">Documents</td></tr>
-                <tr><td width="15%">type</td><td width="15%">revision</td><td>value</td></tr>
-              </thead>
-              <tbody>${rows}</tbody>
-            `
+            document.querySelector('form[name="subdoc"]')
+              .insertAdjacentElement('afterend', docList)
           }
 
           docList.innerHTML = docTable('')
-
-          document.querySelector('form[name="subdoc"]')
-            .insertAdjacentElement('beforeend', docList)
 
           if (d?.id) {
             await client.getApps().set(CONTRACT_APP_NAME, {
@@ -156,15 +237,25 @@ async function updateUI({ mnemonic, address, acctBalance, prettyBalance, idents,
                 console.log('Get Documents:\n', d);
 
                 let docs = d.map(n => {
-                  return `<tr>
-                    <td>${n.type}</td>
-                    <td>${n.revision}</td>
-                    <td>${n.data.message}</td>
+                  let nj = n.toJSON()
+                  return `<tr id="docid-${nj.$id}">
+                    <td>${nj.$type}</td>
+                    <td>${nj.$revision}</td>
+                    <td>${nj.message}</td>
+                    <td>
+                      <form>
+                        <input name="docid" type="hidden" value=${nj.$id} />
+                        <button type="submit">X</button>
+                      </form>
+                    </td>
                   </tr>`
                 })
 
-                document.querySelector('form[name="subdoc"] > table > tbody')
-                  .innerHTML = docs.join('\n')
+                let docListBody = document.querySelector('form[name="subdoc"] + table > tbody')
+
+                if (docListBody) {
+                  docListBody.innerHTML = docs.join('\n')
+                }
               })
               .catch((e) => console.error('Something went wrong:\n', e))
           }
@@ -174,17 +265,50 @@ async function updateUI({ mnemonic, address, acctBalance, prettyBalance, idents,
 
     for(let iid of idents) {
       let ident = await client.platform.identities.get(iid)
-      console.log('Identity', iid, ident)
+      let uniqueNames = await client.platform.names.resolveByRecord(
+        'dashUniqueIdentityId',
+        iid,
+      )
+      let aliases = await client.platform.names.resolveByRecord(
+        'dashAliasIdentityId',
+        iid,
+      )
+      console.log('Identity', iid, ident, uniqueNames, aliases)
+
+      let nameJson = uniqueNames?.[0]?.toJSON()
+      let aliasesJson = aliases?.map(a => a?.toJSON())
+
+      console.log('Identity JSON', nameJson, aliasesJson)
+
+      if (nameJson?.label) {
+        userBalanceEl.innerHTML = `
+          <span>@${nameJson?.label}</span><br>
+          <sub>Ð${prettyBalance}</sub>
+        `
+
+        // toggleForm('regname', false)
+        document.regname.querySelector('input').setAttribute('placeholder', 'YourSuperCoolAlias')
+        document.regname.querySelector('button').textContent = 'Register Alias'
+      } else {
+        toggleForm('regname', true)
+      }
 
       if (!document.getElementById(`rid-${iid}`)) {
-        tbody.insertAdjacentHTML(
-          'beforeend',
-          `<tr id="rid-${iid}">
-            <td>${new Intl.NumberFormat().format(ident.balance)}</td>
-            <td>identity</td>
-            <td>${iid}</td>
-          </tr>`
-        )
+        userBalanceEl
+          .insertAdjacentHTML(
+            'beforeend',
+            `<br><sup>💳${new Intl.NumberFormat().format(ident.balance)}</sup>`
+          )
+      //   tbody.insertAdjacentHTML(
+      //     'beforeend',
+      //     `<tr id="rid-${iid}">
+      //       <td>${new Intl.NumberFormat().format(ident.balance)}</td>
+      //       <td>
+      //         ${iid}
+      //         ${aliasesJson?.map(a => `@${a?.label}`).join('<br>')}
+      //       </td>
+      //     </tr>`
+      //   )
       }
     }
   }
@@ -196,10 +320,100 @@ async function pollWalletStatus() {
   }, 5000)
 }
 
+function on(chain, event, cb = info => console.info(event, info)) {
+  chain.on(
+    event,
+    cb
+  )
+}
+
+function won(chain, event) {
+  on(
+    chain,
+    Dash.WalletLib.EVENTS[event],
+  );
+}
+
+async function addWalletByMneumonic(event) {
+  setMessage('')
+
+  let existingWallet = event?.target?.mnemonic?.value
+
+  console.log('addWalletByMneumonic', dashnet+'_mnemonic', { existingWallet })
+
+  if (existingWallet) {
+    localStorage.setItem(dashnet+'_mnemonic', existingWallet)
+    storedMnemonic = existingWallet
+  }
+
+  window.storedWalletClientOpts = genWalletClient(
+    storedMnemonic,
+    storedContractId,
+    CONTRACT_APP_NAME,
+    dashNetwork,
+    currentHeight
+  )
+
+  console.log('window.storedWalletClientOpts', window.storedWalletClientOpts)
+
+  await initUI()
+}
+
 async function getWalletBalance() {
   setMessage('')
 
+  // on(client, 'CHAIN_STATUS_SYNC')
+  // on(client.getDAPIClient(), 'CHAIN_STATUS_SYNC')
+  // // on(client.getDAPIClient().core, 'CHAIN_STATUS_SYNC')
+  // on(client, 'HISTORICAL_SYNC')
+  // on(client.getDAPIClient(), 'HISTORICAL_SYNC')
+  // on(client, 'CONTINUOUS_SYNC')
+  // on(client.getDAPIClient(), 'CONTINUOUS_SYNC')
+
+  // won(client, 'GENERATED_ADDRESS')
+  // won(client, 'CONFIRMED_BALANCE_CHANGED')
+  // won(client, 'UNCONFIRMED_BALANCE_CHANGED')
+  // won(client, 'PREFETCHED')
+  // won(client, 'DISCOVERY_STARTED')
+  // won(client, 'CONFIGURED')
+  // won(client, 'REHYDRATE_STATE_FAILED')
+  // won(client, 'REHYDRATE_STATE_SUCCESS')
+  // won(client, 'FETCHED_CONFIRMED_TRANSACTION')
+  // won(client, 'TX_METADATA')
+  // won(client, 'BLOCKHEIGHT_CHANGED', info => {
+  //   console.info('BLOCKHEIGHT_CHANGED', info)
+  //   currentHeight = info?.payload
+  // })
+  // won(client, 'BLOCKHEADER')
+  // won(client, 'BLOCK')
+  won(client.wallet, 'HISTORICAL_DATA_OBTAINED')
+  // won(client.wallet.transport, 'HISTORICAL_DATA_OBTAINED')
+
+  console.log('client wallet', client.wallet)
+
   const account = await client.getWalletAccount()
+
+  // on(account, 'CHAIN_STATUS_SYNC')
+  // on(account, 'HISTORICAL_SYNC')
+  // on(account, 'CONTINUOUS_SYNC')
+  // won(account, 'GENERATED_ADDRESS')
+  // won(account, 'CONFIRMED_BALANCE_CHANGED')
+  // won(account, 'UNCONFIRMED_BALANCE_CHANGED')
+  // won(account, 'PREFETCHED')
+  // won(account, 'DISCOVERY_STARTED')
+  // won(account, 'CONFIGURED')
+  // won(account, 'REHYDRATE_STATE_FAILED')
+  // won(account, 'REHYDRATE_STATE_SUCCESS')
+  // won(account, 'FETCHED_UNCONFIRMED_TRANSACTION')
+  // won(account, 'FETCHED_CONFIRMED_TRANSACTION')
+  // won(account, 'TX_METADATA')
+  // won(account, 'HISTORICAL_DATA_OBTAINED')
+  won(account, 'BLOCKHEIGHT_CHANGED', info => {
+    console.info('BLOCKHEIGHT_CHANGED', info)
+    currentHeight = info?.payload
+  })
+  won(account, 'BLOCKHEADER')
+  won(account, 'BLOCK')
 
   const idents = await account.identities.getIdentityIds()
 
@@ -218,70 +432,23 @@ async function getWalletBalance() {
   console.log('Balance:', totalBalance, unBalanced, acctBalance, prettyBalance)
   console.log('Identities:', idents)
 
-  account.on(
-    Dash.WalletLib.EVENTS.GENERATED_ADDRESS,
-    (info) => console.info('GENERATED_ADDRESS', info)
-  );
-  account.on(
-    Dash.WalletLib.EVENTS.CONFIRMED_BALANCE_CHANGED,
-    (info) => console.info('CONFIRMED_BALANCE_CHANGED', info)
-  );
-  account.on(
-    Dash.WalletLib.EVENTS.UNCONFIRMED_BALANCE_CHANGED,
-    (info) => console.info('UNCONFIRMED_BALANCE_CHANGED', info)
-  );
-  account.on(
-    Dash.WalletLib.EVENTS.PREFETCHED,
-    (info) => console.info('PRE_FETCHED', info)
-  );
-  account.on(
-    Dash.WalletLib.EVENTS.DISCOVERY_STARTED,
-    (info) => console.info('DISCOVERY_STARTED', info)
-  );
-  account.on(
-    Dash.WalletLib.EVENTS.CONFIGURED,
-    (info) => console.info('CONFIGURED_', info)
-  );
-  account.on(
-    Dash.WalletLib.EVENTS.REHYDRATE_STATE_FAILED,
-    (info) => console.info('REHYDRATE_STATE_FAILED', info)
-  );
-  account.on(
-    Dash.WalletLib.EVENTS.REHYDRATE_STATE_SUCCESS,
-    (info) => console.info('REHYDRATE_STATE_SUCCESS', info)
-  );
-  account.on(
-    Dash.WalletLib.EVENTS.FETCHED_CONFIRMED_TRANSACTION,
-    (info) => console.info('FETCHED_CONFIRMED_TRANSACTION', info)
-  );
-  account.on(
-    Dash.WalletLib.EVENTS.TX_METADATA,
-    (info) => console.info('TX_METADATA', info)
-  );
-  account.on(
-    Dash.WalletLib.EVENTS.BLOCKHEIGHT_CHANGED,
-    (info) => console.info('BLOCKHEIGHT_CHANGED', info)
-  );
-  account.on(
-    Dash.WalletLib.EVENTS.BLOCKHEADER,
-    (info) => console.info('BLOCKHEADER_', info)
-  );
-  account.on(
-    Dash.WalletLib.EVENTS.BLOCK,
-    (info) => console.info('BLOCK_', info)
-  );
-
-  if (!alphaMnemonic) {
-    localStorage.setItem('mnemonic', mnemonic)
-    alphaMnemonic = mnemonic
+  if (!storedMnemonic) {
+    localStorage.setItem(dashnet+'_mnemonic', mnemonic)
+    storedMnemonic = mnemonic
   }
 
-  if (address !== alphaAddress) {
-    localStorage.setItem('address', address)
-    alphaAddress = address
+  if (address !== storedAddress) {
+    localStorage.setItem(dashnet+'_address', address)
+    storedAddress = address
   }
 
   await updateUI({ mnemonic, address, acctBalance, prettyBalance, idents, })
+
+  getApps()
+    .then((d) => {
+      console.log('get apps', d)
+    })
+    .catch((e) => console.error('Something went wrong:\n', e))
 
   // Handle wallet async errors
   client.on('error', (error, context) => {
@@ -294,15 +461,30 @@ async function getWalletBalance() {
 
 async function createIdentity() {
   setMessage('')
+  let tmpWA = await client.getWalletAccount()
 
-  console.log('client.platform.identities', await (await client.getWalletAccount()).identities.getIdentityIds())
+  console.log(
+    'createIdentity getWalletAccount',
+    tmpWA
+  )
+
+  let tmpIDS = await tmpWA.identities.getIdentityIds()
+
+  console.log(
+    'createIdentity getIdentityIds',
+    tmpIDS
+  )
 
   const newIdentity = await client.platform.identities.register()
+
+  console.log('newIdentity:', newIdentity)
+
   const jsonIdent = newIdentity.toJSON()
 
-  console.log('Identity:', newIdentity, jsonIdent)
-  localStorage.setItem('identity_id', jsonIdent.id)
-  alphaIdentityId = jsonIdent.id
+  console.log('jsonIdent:', jsonIdent)
+
+  localStorage.setItem(dashnet+'_identity_id', jsonIdent.id)
+  storedIdentityId = jsonIdent.id
 
   // if (newIdentity) {
   //   toggleForm('genident')
@@ -312,7 +494,6 @@ async function createIdentity() {
   //   'beforeend',
   //   `<tr>
   //     <td>${new Intl.NumberFormat().format(newIdentity.balance)}</td>
-  //     <td>identity</td>
   //     <td>${jsonIdent.id}</td>
   //   </tr>`
   // )
@@ -325,15 +506,62 @@ async function createIdentity() {
 async function topupIdentity() {
   const topUpAmount = 1500;
 
-  await client.platform.identities.topUp(alphaIdentityId, topUpAmount);
-  return client.platform.identities.get(alphaIdentityId);
+  await client.platform.identities.topUp(storedIdentityId, topUpAmount);
+  return client.platform.identities.get(storedIdentityId);
+}
+
+const retrieveName = async (user) => {
+  if (!user) return
+  // Retrieve by full name (e.g., myname.dash)
+  return client.platform.names.resolve(`${user}.dash`);
+}
+
+async function registerName() {
+  setMessage('')
+
+  let name = document.regname?.elements?.user?.value
+
+  let userQuery = await retrieveName(name)
+
+  console.log(
+    'registerName userQuery',
+    name,
+    userQuery
+  )
+
+  if (userQuery !== null) {
+    return false
+  }
+
+  let uniqueUserID = await client.platform.names.resolveByRecord(
+    'dashUniqueIdentityId',
+    storedIdentityId,
+  )
+
+  const identity = await client.platform.identities.get(storedIdentityId);
+
+  let regType = {
+    [
+      uniqueUserID?.length > 0 ?
+        'dashAliasIdentityId' :
+        'dashUniqueIdentityId'
+    ]: identity.getId()
+  }
+
+  const nameReg = await client.platform.names.register(
+    `${name}.dash`,
+    regType,
+    identity,
+  );
+
+  return nameReg
 }
 
 
 async function registerContract() {
   setMessage('')
-  console.log('reg contract for id', alphaIdentityId)
-  const identity = await client.platform.identities.get(alphaIdentityId)
+  console.log('reg contract for id', storedIdentityId)
+  const identity = await client.platform.identities.get(storedIdentityId)
 
   const contractDocuments = {
     note: {
@@ -357,8 +585,8 @@ async function registerContract() {
   const validationResult = await client.platform.dpp.dataContract.validate(contract)
 
   if (validationResult.isValid()) {
-    localStorage.setItem('contract_id', contract.id)
-    alphaContractId = contract.id
+    localStorage.setItem(dashnet+'_contract_id', contract.id)
+    storedContractId = contract.id
     console.log('Validation passed, broadcasting contract..')
     // Sign and submit the data contract
     return await client.platform.contracts.publish(contract, identity)
@@ -369,36 +597,56 @@ async function registerContract() {
 }
 
 async function retrieveContract() {
-  if (!alphaIdentityId || !alphaContractId) {
-    throw { alphaIdentityId, alphaContractId }
+  if (!storedIdentityId || !storedContractId) {
+    throw { storedIdentityId, storedContractId }
   }
-  return await client.platform.contracts.get(alphaContractId)
+  return await client.platform.contracts.get(storedContractId)
 }
 
-async function submitDoc() {
+async function subOrModDoc(docObj) {
   setMessage('')
 
-  const identity = await client.platform.identities.get(alphaIdentityId);
+  const {
+    id = null,
+    message = document.subdoc?.msg?.value,
+    time = new Date().toUTCString(),
+  } = docObj
 
-  // retrieveContract()
-  //   .then(async (d) => {
-  //     console.log('retrieve data contract', d)
+  const identity = await client.platform.identities.get(storedIdentityId);
 
-  //     if (d?.id) {
-  //       await client.getApps().set(CONTRACT_APP_NAME, {
-  //         contractId: Dash.PlatformProtocol.Identifier.from(d.id), // d?.id || d?.dataContract?.id
-  //         contract: d,
-  //       })
-  //     }
-  //   })
+  console.log('submitDoc', { docObj })
 
-  // console.log('submitDoc', { event })
+  if (id && !message) {
+    const [doc] = await client.platform.documents.get(
+      `${CONTRACT_APP_NAME}.note`,
+      { where: [['$id', '==', id]] },
+    );
+
+    // Sign and submit the document delete transition
+    return client.platform.documents.broadcast({ delete: [doc] }, identity);
+  }
+
+  if (id && message) {
+    const [doc] = await client.platform.documents.get(
+      `${CONTRACT_APP_NAME}.note`,
+      { where: [['$id', '==', id]] },
+    );
+
+    doc.set('message', `${
+      message
+    } @ ${
+      time
+    }`);
+
+    // Sign and submit the document delete transition
+    return client.platform.documents.broadcast({ replace: [doc] }, identity);
+  }
 
   const docProperties = {
     message: `${
-      document.subdoc?.elements?.msg?.value || 'empty msg'
+      message
     } @ ${
-      new Date().toUTCString()
+      time
     }`,
   };
 
@@ -411,8 +659,8 @@ async function submitDoc() {
 
   const documentBatch = {
     create: [noteDocument], // Document(s) to create
-    replace: [], // Document(s) to update
-    delete: [], // Document(s) to delete
+    // replace: [], // Document(s) to update
+    // delete: [], // Document(s) to delete
   };
 
   console.log(
@@ -437,97 +685,199 @@ async function getApps() {
   return await client.getApps()
 }
 
-function generateButton(name, callback = () => {}) {
-  let generatedButton = document.querySelector(`form[name="${name}"]`)
-
-  generatedButton?.addEventListener('submit', event => {
+function genBtnHandler(name, callback) {
+  return event => {
     event.preventDefault()
     console.log(`form generate ${name} submit`, event)
 
     callback(event)
       .catch((e) => console.error('Something went wrong:\n', e))
-  })
+  }
+}
+
+function generateButton(name, callback = () => {}) {
+  let generatedButton = document.querySelector(`form[name="${name}"]`)
+
+  generatedButton?.addEventListener('submit', genBtnHandler(name, callback))
 
   return generatedButton
 }
 
-getBestBlock()
+async function initUI() {
+  if (!storedMnemonic) {
+    setMessage(`
+      <p>Enter a Testnet Wallet Mnemonic</p>
+      <form name="usewallet">
+        <input name="mnemonic" placeholder="Enter your testnet seed phrase (mnemonic)" />
+        <button type="submit">Open Wallet</button>
+      </form>
 
-getChainStatus()
+      <h3>OR</h3>
 
-getWalletBalance()
+      <form name="genwallet">
+        <button type="submit">Generate New Wallet</button>
+      </form>
+    `, 'center')
 
-getApps()
-  .then((d) => {
-    console.log('get apps', d)
+    generateButton(
+      'usewallet',
+      addWalletByMneumonic
+    )
+
+    generateButton(
+      'genwallet',
+      () => reloadUI()
+    )
+
+    return
+  }
+
+  await reloadUI()
+}
+
+async function reloadUI() {
+  document.querySelectorAll('form:not([name="dashnet"])').forEach(element => {
+    element.parentNode.replaceChild(element.cloneNode(true), element);
   })
-  .catch((e) => console.error('Something went wrong:\n', e))
 
+  document.body.addEventListener('submit', async event => {
+    event.preventDefault()
+    let docId = event.target.docid?.value
+    console.log(`submit form`, event.target.name, docId)
+    if (!event.target.name && docId) {
+      // removeDoc
+      await subOrModDoc({ id: docId, message: false })
+        .then(res => {
+          console.log('document deleted', docId, res)
+          document.getElementById(`docid-${docId}`)?.remove()
+        })
+    }
+  })
 
-// pollWalletStatus()
+  client = new Dash.Client(storedWalletClientOpts)
 
-generateButton(
-  'genident',
-  () => createIdentity()
-)
+  window.dashClient = client
 
-generateButton(
-  'topup',
-  () => topupIdentity()
-)
+  userBalanceEl.innerHTML = ''
 
-generateButton(
-  'gencon',
-  () => registerContract()
-    .then(async d => {
-      let dj = d?.toJSON()
+  getBestBlock()
 
-      console.log('Contract registered:', d, dj)
-      localStorage.setItem('contract_id', d?.id || dj?.dataContract?.$id)
-      alphaContractId = d?.id || dj?.dataContract?.$id
+  getChainStatus()
 
-      let apps = client.getApps()
+  getWalletBalance()
 
-      apps.set(CONTRACT_APP_NAME, {
-        contractId: Dash.PlatformProtocol.Identifier.from(alphaContractId),
-        contract: d,
-      })
+  // pollWalletStatus()
 
-      console.log('Registered apps:', apps)
+  generateButton(
+    'genident',
+    () => createIdentity()
+  )
 
-      await updateUI({ idents: [alphaIdentityId] })
+  generateButton(
+    'topup',
+    () => topupIdentity()
+  )
 
-      client.disconnect()
+  generateButton(
+    'gencon',
+    () => registerContract()
+      .then(async d => {
+        let dj = d?.toJSON()
 
-      window.alphaWalletClientOpts = genWalletClient(
-        alphaMnemonic,
-        alphaContractId,
-        CONTRACT_APP_NAME
-      )
+        console.log('Contract registered:', d, dj)
+        localStorage.setItem(dashnet+'_contract_id', d?.id || dj?.dataContract?.$id)
+        storedContractId = d?.id || dj?.dataContract?.$id
 
-      client = new Dash.Client(alphaWalletClientOpts)
+        let apps = client.getApps()
 
-      // return apps
-    })
-)
+        apps.set(CONTRACT_APP_NAME, {
+          contractId: Dash.PlatformProtocol.Identifier.from(storedContractId),
+          contract: d,
+        })
 
-generateButton(
-  'subdoc',
-  () => submitDoc()
-    .then(pd => {
-      console.log('genbtn subdoc', pd, pd.toJSON())
-      let d = pd.transitions[0]
+        console.log('Registered apps:', apps)
 
-      document.querySelector('table.docs tbody')
-        .insertAdjacentHTML(
-          'afterbegin',
-          `<tr>
-            <td>${d.type}</td>
-            <td>${d.revision ?? 'pending'}</td>
-            <td>${d.data.message}</td>
-          </tr>`
+        await updateUI({ idents: [storedIdentityId] })
+
+        client.disconnect()
+
+        window.storedWalletClientOpts = genWalletClient(
+          storedMnemonic,
+          storedContractId,
+          CONTRACT_APP_NAME,
+          dashNetwork,
+          currentHeight,
         )
 
-      document.subdoc.elements.msg.value = ''
-    })
-)
+        client = new Dash.Client(storedWalletClientOpts)
+
+        // return apps
+      })
+  )
+
+  generateButton(
+    'regname',
+    () => registerName()
+      .then(un => {
+        if (!un) {
+          console.log('Username conflict')
+          return
+        }
+        let unj = un.toJSON()
+
+        console.log('Username registered:', un, unj)
+
+        localStorage.setItem(dashnet+'_user_id', unj?.$id)
+        localStorage.setItem(dashnet+'_username', unj?.label)
+
+        storedUserId = unj.$id
+        storedUserName = unj.label
+
+        if (unj?.label) {
+          userBalanceEl
+            .insertAdjacentHTML(
+              'afterbegin',
+              `<span>@${unj?.label}</span><br>`
+            )
+          // .innerHTML =
+
+          toggleForm('regname', false)
+          document.regname.querySelector('input').setAttribute('placeholder', 'YourSuperCoolAlias')
+          document.regname.querySelector('button').textContent = 'Register Alias'
+        }
+
+        document.regname.elements.user.value = ''
+      })
+  )
+
+  generateButton(
+    'subdoc',
+    () => subOrModDoc({ message: document.subdoc?.msg?.value, })
+      .then(pd => {
+        let d = pd.transitions[0]
+        let pdj = pd.toJSON()
+        let pdt = pdj.transitions[0]
+        console.log('genbtn subdoc', pd, pdj)
+
+        document.querySelector('table.docs tbody')
+          .insertAdjacentHTML(
+            'afterbegin',
+            `<tr id="docid-${pdt.$id}">
+              <td>${pdt.$type}</td>
+              <td>${pdt.$revision ?? 'processing'}</td>
+              <td>${pdt.message}</td>
+              <td>
+                <form>
+                  <input name="docid" type="hidden" value=${pdt.$id} />
+                  <button type="submit">X</button>
+                </form>
+              </td>
+            </tr>`
+          )
+
+        document.subdoc.elements.msg.value = ''
+      })
+  )
+}
+
+await initUI()

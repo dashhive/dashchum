@@ -2,104 +2,123 @@
 <html lang="en" dir="ltr">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dash Chum</title>
-<style>
-  body { background: #222; color: #eee; }
-  form { margin-bottom: 1rem; }
-  table {
-    width: 100%;
-  }
-  table > tbody td {
-    padding: 1rem;
-  }
-  .hide {
-    display: none;
-  }
-  a {
-    color: deepskyblue;
-    text-decoration: none;
-  }
-  a:hover {
-    color: deepskyblue;
-    text-decoration: dashed;
-    text-decoration-line: underline;
-  }
-  pre {
-    background-color: #111;
-    padding: 1rem;
-    max-width: 100%;
-    /* overflow: auto; */
-  }
-  pre code {
-    white-space: pre-line;
-  }
-  pre code > * {
-    display: inline;
-  }
-  pre code .dem {
-    color: #888;
-  }
-  pre code em {
-    color: #f55;
-    font-style: normal;
-  }
-  pre code address {
-    color: #5b5;
-    font-style: normal;
-  }
-  pre code output {
-    color: #0bf;
-    font-style: italic;
-  }
-  form[name="subdoc"] {
-    margin-top: 2rem;
-  }
-</style>
+<script>if (localStorage.getItem('invert')){document.documentElement.classList.add('it')}</script>
+<link rel="stylesheet" type="text/css" media="screen" href="index.css">
 </head>
 <body>
 <h1>Dash Chum</h1>
+<header>
+  <form name="genident" class="hide">
+    <button type="submit">Generate Identity</button>
+  </form>
 
-<div class="msg"></div>
+  <form name="regname" class="hide">
+    <fieldset class="col">
+      <input name="user" placeholder="YourSuperCoolUserName" />
+      <button type="submit">Register Username</button>
+    </fieldset>
+  </form>
 
-<!-- <form name="genwal" class="hide">
-  <button type="submit">Generate Wallet</button>
-</form> -->
+  <figure class="user"><figcaption></figcaption></figure>
 
-<form name="genident" class="hide">
-  <button type="submit">Generate Identity</button>
-</form>
+  <article class="addr"></article>
 
-<form name="topup" class="hide">
-  <button type="submit">Top Up Identity</button>
-</form>
+  <form name="dashnet" class="">
+    <fieldset>
+      <label for="net">Network:</label>
+      <select id="net">
+        <option>testnet</option>
+        <option>localnet</option>
+      </select>
+    </fieldset>
+    <fieldset class="hide col customnet">
+      <label for="host">Custom Network:</label>
+      <input id="host" name="host" placeholder="localhost:3000:3010" value="dashmate:3000:3010" />
+      <button type="submit">Set Network</button>
+    </fieldset>
+    <!-- <fieldset>
+      <label>
+        <input type="radio" name="network" value="testnet" checked />
+        testnet
+      </label>
+      <label>
+        <input type="radio" name="network" value="devnet" />
+        devnet
+      </label>
+    </fieldset> -->
+  </form>
+</header>
+<main>
+  <div class="msg"></div>
 
-<table class="hide">
-  <thead>
-    <tr>
-      <th>Balance</th>
-      <th>Mnemonic</th>
-      <th>Address</th>
-    </tr>
-  </thead>
-  <tbody>
-    <!--
-    <tr>
-      <td></td>
-      <td></td>
-      <td></td>
-    </tr>
-    -->
-  </tbody>
-</table>
+  <!-- <form name="genwal" class="hide">
+    <button type="submit">Generate Wallet</button>
+  </form> -->
 
-<form name="gencon" class="hide">
-  <button type="submit">Generate Contract</button>
-</form>
+  <form name="topup" class="hide">
+    <button type="submit">Top Up Identity</button>
+  </form>
 
-<form name="subdoc" class="hide">
-  <input name="msg" placeholder="Type a message..." />
-  <button type="submit">Save Message</button>
-</form>
+  <!-- <table class="hide">
+    <thead>
+      <tr>
+        <th>Balance</th>
+        <th>Address</th>
+      </tr>
+    </thead>
+    <tbody>
+    </tbody>
+  </table> -->
+
+  <form name="gencon" class="hide">
+    <button type="submit">Generate Contract</button>
+  </form>
+
+  <form name="subdoc" class="hide">
+    <input name="msg" placeholder="Type a message..." />
+    <button type="submit">Save Message</button>
+  </form>
+</main>
+
+<script>
+  function getNetworkType(netType = dashNetwork) {
+    return netType === 'testnet' ? 'test' : 'local'
+  }
+  function changeNetwork(event, callback = () => {}) {
+    let netval = document.dashnet.net.value
+
+    console.log('changed network', netval, event)
+
+    if (netval === 'localnet') {
+      document.querySelector('.customnet').classList.remove('hide')
+      localStorage.setItem('network', document.dashnet.host.value)
+      dashNetwork = document.dashnet.host.value
+      dashnet = getNetworkType(dashNetwork)
+      currentHeight = 1
+    } else {
+      document.querySelector('.customnet').classList.add('hide')
+      localStorage.setItem('network', netval)
+      dashNetwork = netval
+      dashnet = getNetworkType(dashNetwork)
+      currentHeight = 836699
+    }
+
+    callback({ dashNetwork, dashnet })
+  }
+  function setNetworkUI() {
+    document.dashnet.net.value = `${dashnet}net`
+
+    changeNetwork()
+  }
+
+  let dashNetwork = localStorage.getItem('network') || 'testnet'
+  let dashnet = getNetworkType(dashNetwork)
+  let currentHeight = dashnet === 'test' ? 836699 : 1
+
+  setNetworkUI()
+</script>
 
 <script src="./node_modules/dash/dist/dash.min.js"></script>
 <script src="./index.js" type="module" async></script>
