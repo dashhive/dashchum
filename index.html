@@ -1,14 +1,18 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Dash Chum</title>
-<script>if (localStorage.getItem('invert')){document.documentElement.classList.add('it')}</script>
-<link rel="stylesheet" type="text/css" media="screen" href="index.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dash Chum</title>
+  <script>
+  if (localStorage.getItem('invert')){document.documentElement.classList.add('it')}
+  </script>
+  <link rel="stylesheet" type="text/css" media="screen" href="index.css">
 </head>
 <body>
+
 <h1>Dash Chum</h1>
+
 <header>
   <form name="genident" class="hide">
     <button type="submit">Generate Identity</button>
@@ -38,39 +42,22 @@
       <input id="host" name="host" placeholder="localhost:3000:3010" value="dashmate:3000:3010" />
       <button type="submit">Set Network</button>
     </fieldset>
-    <!-- <fieldset>
-      <label>
-        <input type="radio" name="network" value="testnet" checked />
-        testnet
-      </label>
-      <label>
-        <input type="radio" name="network" value="devnet" />
-        devnet
-      </label>
-    </fieldset> -->
   </form>
 </header>
 <main>
   <div class="msg"></div>
 
-  <!-- <form name="genwal" class="hide">
-    <button type="submit">Generate Wallet</button>
-  </form> -->
-
-  <form name="topup" class="hide">
-    <button type="submit">Top Up Identity</button>
+  <form name="funds2address" class="hide">
+    <input name="to" placeholder="Enter dash address..." />
+    <input name="amount" placeholder="0.000" />
+    <button type="submit">Send to Address</button>
   </form>
 
-  <!-- <table class="hide">
-    <thead>
-      <tr>
-        <th>Balance</th>
-        <th>Address</th>
-      </tr>
-    </thead>
-    <tbody>
-    </tbody>
-  </table> -->
+  <form name="funds2user" class="hide">
+    <input name="to" placeholder="Enter dash username..." />
+    <input name="amount" placeholder="0.000" />
+    <button type="submit">Send to User</button>
+  </form>
 
   <form name="gencon" class="hide">
     <button type="submit">Generate Contract</button>

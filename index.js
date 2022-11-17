@@ -49,7 +49,7 @@ dashnet = getNetworkType(dashNetwork)
 document.dashnet.net.addEventListener(
   'change',
   () => changeNetwork(null, async (netChange) => {
-    await client.disconnect()
+    await client?.disconnect()
 
     dashNetwork = netChange.dashNetwork
     dashnet = netChange.dashnet
@@ -147,10 +147,6 @@ function docTable(rows) {
 }
 
 async function updateUI({ mnemonic, address, acctBalance, prettyBalance, idents, }) {
-  if (table?.classList.contains('hide')) {
-    table.classList.remove('hide')
-  }
-
   let docList = document.querySelector('form[name="subdoc"] + table')
   docList = docList?.remove()
   toggleForm('subdoc', false)
@@ -158,10 +154,7 @@ async function updateUI({ mnemonic, address, acctBalance, prettyBalance, idents,
   if (mnemonic && address && prettyBalance) {
     addrEl.innerHTML = `<div>Unused Address:</div>${address}`
     userBalanceEl.innerHTML = `<sub>Ð${prettyBalance}</sub>`
-    // `<tr>
-    //   <td>${prettyBalance}</td>
-    //   <td>${address}</td>
-    // </tr>`
+    toggleForm('funds2address', true)
   }
 
   console.log(
@@ -285,6 +278,7 @@ async function updateUI({ mnemonic, address, acctBalance, prettyBalance, idents,
           <span>@${nameJson?.label}</span><br>
           <sub>Ð${prettyBalance}</sub>
         `
+        toggleForm('funds2user', true)
 
         // toggleForm('regname', false)
         document.regname.querySelector('input').setAttribute('placeholder', 'YourSuperCoolAlias')
@@ -297,7 +291,7 @@ async function updateUI({ mnemonic, address, acctBalance, prettyBalance, idents,
         userBalanceEl
           .insertAdjacentHTML(
             'beforeend',
-            `<br><sup>💳${new Intl.NumberFormat().format(ident.balance)}</sup>`
+            `<br><sup>¢💳${new Intl.NumberFormat().format(ident.balance)}</sup>`
           )
       //   tbody.insertAdjacentHTML(
       //     'beforeend',
@@ -334,29 +328,38 @@ function won(chain, event) {
   );
 }
 
-async function addWalletByMneumonic(event) {
+async function addWalletByMnemonic(event) {
   setMessage('')
 
   let existingWallet = event?.target?.mnemonic?.value
+  let validMnemonic = false
 
-  console.log('addWalletByMneumonic', dashnet+'_mnemonic', { existingWallet })
-
-  if (existingWallet) {
-    localStorage.setItem(dashnet+'_mnemonic', existingWallet)
-    storedMnemonic = existingWallet
+  try {
+    validMnemonic = Dash.Core.Mnemonic.isValid(existingWallet)
+  } catch (err) {
+    validMnemonic = false
   }
 
-  window.storedWalletClientOpts = genWalletClient(
-    storedMnemonic,
-    storedContractId,
-    CONTRACT_APP_NAME,
-    dashNetwork,
-    currentHeight
-  )
+  console.log('addWalletByMnemonic', dashnet+'_mnemonic', { existingWallet, validMnemonic })
 
-  console.log('window.storedWalletClientOpts', window.storedWalletClientOpts)
+  if (existingWallet && validMnemonic) {
+    localStorage.setItem(dashnet+'_mnemonic', existingWallet)
+    storedMnemonic = existingWallet
 
-  await initUI()
+    window.storedWalletClientOpts = genWalletClient(
+      storedMnemonic,
+      storedContractId,
+      CONTRACT_APP_NAME,
+      dashNetwork,
+      currentHeight
+    )
+
+    console.log('window.storedWalletClientOpts', window.storedWalletClientOpts)
+
+    return await initUI()
+  }
+
+  console.log('mnemonic is invalid', { existingWallet, validMnemonic })
 }
 
 async function getWalletBalance() {
@@ -510,6 +513,42 @@ async function topupIdentity() {
   return client.platform.identities.get(storedIdentityId);
 }
 
+async function sendFunds(event) {
+  let { name, to, amount } = event.target
+
+  console.log(
+    'send funds to',
+    to.value,
+    amount.value,
+    name,
+  )
+
+  if (name === 'funds2address') {
+    const account = await client.getWalletAccount();
+
+    const transaction = account.createTransaction({
+      recipient: to.value, // Testnet2 faucet
+      satoshis: amount.value * SAT, // 1 Dash
+    });
+
+    return account.broadcastTransaction(transaction);
+  }
+
+  if (name === 'funds2user') {
+    let resolvedUser = await retrieveName(to.value)
+
+    console.log('resolved user', resolvedUser, resolvedUser.toJSON())
+
+    let userIdentity = await client.platform.identities.get(
+      resolvedUser.ownerId.toString()
+    )
+
+    console.log('user identity', userIdentity, userIdentity.toJSON())
+
+    return { resolvedUser, userIdentity, }
+  }
+}
+
 const retrieveName = async (user) => {
   if (!user) return
   // Retrieve by full name (e.g., myname.dash)
@@ -556,7 +595,6 @@ async function registerName() {
 
   return nameReg
 }
-
 
 async function registerContract() {
   setMessage('')
@@ -721,7 +759,7 @@ async function initUI() {
 
     generateButton(
       'usewallet',
-      addWalletByMneumonic
+      addWalletByMnemonic
     )
 
     generateButton(
@@ -776,6 +814,22 @@ async function reloadUI() {
   generateButton(
     'topup',
     () => topupIdentity()
+  )
+
+  generateButton(
+    'funds2address',
+    event => sendFunds(event)
+      .then(res => {
+        console.log('sent funds to address', res)
+      })
+  )
+
+  generateButton(
+    'funds2user',
+    event => sendFunds(event)
+      .then(res => {
+        console.log('sent funds to user', res)
+      })
   )
 
   generateButton(
