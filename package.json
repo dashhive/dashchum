@@ -4,7 +4,8 @@
   "description": "a simple HTML, CSS & JS test kit for DashMate",
   "main": "index.js",
   "scripts": {
-    "start": "npx serve -l 5555 ."
+    "start": "npx serve -l 5555 .",
+    "build": "mkdir -p ./public/node_modules/dash/dist/ && cp index.* ./public/ && cp config.js ./public/ && cp ./node_modules/dash/dist/dash.min.js ./public/node_modules/dash/dist/"
   },
   "keywords": [
     "dash",
