@@ -1,15 +1,15 @@
 # Dash Chum
-### a simple HTML, CSS & JS test kit for [Dash Mate](https://github.com/dashpay/platform/tree/v0.23.0-alpha.7/packages/dashmate)
+### a simple HTML, CSS & JS test kit for [Dash Mate](https://github.com/dashpay/platform/tree/v0.23.2/packages/dashmate)
 
 > A lot of the work that went in to making this repo has been streamed and is available in this [Dash Chum YouTube Playlist](https://youtube.com/playlist?list=PLYU0okGwK--I0xm22OqLl6wjGUTmx-afP)
 
 The instructions below are meant to give you a working local [Dash](https://www.dash.org/) testnet / devnet. The purpose of which is to allow building on the Dash platform without needing to use real Dash (Ð).
 
-This gives you a siloed Dash network and generates a wallet unique to your locally running network. You fund it via the Seed Node generated from [Dashmate](https://github.com/dashpay/platform/tree/v0.23.0-alpha.7/packages/dashmate) (see [Usage](#usage)).
+This gives you a siloed Dash network and generates a wallet unique to your locally running network. You fund it via the Seed Node generated from [Dashmate](https://github.com/dashpay/platform/tree/v0.23.2/packages/dashmate) (see [Usage](#usage)).
 
 ## Purpose
 
-The purpose of this project is to test [Dashmate](https://github.com/dashpay/platform/tree/v0.23.0-alpha.7/packages/dashmate) and the [Dash Platform](https://dashplatform.readme.io/docs/tutorial-create-and-fund-a-wallet), centered around implementing functional examples of the tutorials at https://dashplatform.readme.io/docs/tutorials-introduction
+The purpose of this project is to test [Dashmate](https://github.com/dashpay/platform/tree/v0.23.2/packages/dashmate) and the [Dash Platform](https://dashplatform.readme.io/docs/tutorial-create-and-fund-a-wallet), centered around implementing functional examples of the tutorials at https://dashplatform.readme.io/docs/tutorials-introduction
 
 Once your system is setup with Docker, Node.js & Dashmate running correctly, Dash Chum should allow testing the following functionality:
 
@@ -26,7 +26,7 @@ Once your system is setup with Docker, Node.js & Dashmate running correctly, Das
 ### System Prerequisites
 * [Docker](https://docs.docker.com/engine/installation/) (v20.10+)
 * [Node.js](https://nodejs.org/en/download/) (v16.0+, NPM v8.0+)
-* [Dashmate](https://github.com/dashpay/platform/tree/v0.23.0-alpha.7/packages/dashmate) (v0.23.0-alpha.7)
+* [Dashmate](https://github.com/dashpay/platform/tree/v0.23.2/packages/dashmate) (v0.23.2)
 
 You will need to install Docker, Node.js & `dashmate`, which can be achieved with the instructions below.
 
@@ -51,7 +51,7 @@ If you skip the steps above (perhaps you already have them installed) and run in
 #### Dashmate Installation & Setup
 ```sh
 # Install Dashmate
-npm i -g dashmate@0.23-alpha
+npm i -g dashmate@0.23.2
 
 # Setup Dashmate
 # won't work if newgrp / logout step is skipped
@@ -59,6 +59,14 @@ npm i -g dashmate@0.23-alpha
 # if either of these steps fail,
 # try re-running each once or twice
 dashmate setup local
+
+# generates a new wallet and returns
+# public and private keypair and adds funds
+dashmate wallet:mint 10 --config=local_seed
+
+# If you already have a wallet you can fund it like this
+dashmate wallet:mint 10 --address=REPLACE_WITH_DASH_ADDRESS --config=local_seed
+
 dashmate group start
 ```
 The official method from the [Testnet Masternode Dash Docs](https://docs.dash.org/en/stable/masternodes/setup-testnet.html?highlight=dashmate#dashmate-installation) also works, but was a little outdated at time of writing (Oct 2022).
@@ -116,12 +124,14 @@ You will likely find the need to reset [^3] your dashmate (perhaps daily), this 
 
 ```sh
 #!/bin/sh
-dashmate group stop
-# docker stop $(docker ps -q) # in some scenarios this may be needed
-docker system prune -f
-docker volume prune -f
+# dashmate group stop
+#docker stop $(docker ps -q) # in some scenarios this may be needed
+docker rm -f -v $(docker ps -a -q) || true
+docker system prune -f --volumes
 rm -rf ~/.dashmate
 dashmate setup local
+dashmate wallet:mint 10 --config=local_seed # optional
+dashmate wallet:mint 10 --address=REPLACE_WITH_DASH_ADDRESS --config=local_seed # optional
 ```
 
 ### Stop Dashmate when not in use
